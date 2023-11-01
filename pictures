@@ -1,0 +1,95 @@
+import os
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+import tkinter as tk
+from PIL import ImageTk, Image
+import pyautogui
+
+
+
+#initiate window and open on second monitor
+def init():
+    global window
+    window = tk.Tk()
+    window.title("Pictures")
+    window.geometry("1920x1080+2555+200")
+    window.state('zoomed')
+
+    window.mainloop()
+    
+#resize image to selected region
+def resize():
+    for ilabel in window.children.values():
+        # Check which label the click occured in
+        if ilabel.winfo_rootx() <= mouse_x <= ilabel.winfo_rootx() + ilabel.winfo_width() and \
+                ilabel.winfo_rooty() <= mouse_y <= ilabel.winfo_rooty() + ilabel.winfo_height():
+            label = ilabel
+    image = label.cget("image")
+    #crops image to selected region
+    im = image.crop(mouse_x, mouse_y, release_mouse_x, release_mouse_y)
+    photo = ImageTk.PhotoImage(im)
+    label = tk.Label(window, photo)
+
+def track_mouse_click(event):
+    # Retrieve the position where the mouse was clicked
+    global mouse_x
+    global mouse_y
+    mouse_x = event.x
+    mouse_y = event.y
+
+def track_mouse_release(event):
+    # Retrieve the position where the mouse was released
+    global release_mouse_x
+    global release_mouse_y
+    release_mouse_x = event.x
+    release_mouse_y = event.y
+    resize()
+    
+def open():
+    #check if window is open, catches error if window isn't initialized
+    try:
+        window.state()
+    except:
+        return False
+    return True
+    
+def clear():
+    for ilabel in window.children.values():
+        ilabel.destroy()
+    window.update()
+
+#grab screenshot and save as name.png
+def screenshot(name):
+    pwd = "C:\\Users\\Remus\\Documents\\Workspace\\Aya\\pictures\\"
+    #screenshots desktop
+    if "Remus" == name:
+        screenshot = pyautogui.screenshot()
+        screenshot.save(pwd + name + ".png")
+
+        #directs to specific link based on name (placeholder links for now)
+    else:
+        names = {"2": "https://www.twitch.tv", "3": "https://www.twitch.tv", "4": "https://www.twitch.tv", "5": "https://www.twitch.tv", "6": "https://www.twitch.tv", "7": "https://www.twitch.tv", "8": "https://www.twitch.tv"}
+        options = webdriver.ChromeOptions()
+        options.add_argument('window-position=2560,0') 
+        driver = webdriver.Chrome(options=options)
+        driver.maximize_window()
+        
+
+        #fullscreens the twitch screen
+        driver.get(names[name])
+        elem = driver.find_element(By.XPATH, "//section[@id='channel-player']/div[1]/div[2]/div[6]/button")
+        elem.send_keys(Keys.RETURN)
+
+        #takes the screenshot then closes window
+        driver.save_screenshot(pwd + name + ".png")
+        driver.close()
+    add_image(pwd + name + ".png")
+
+#adds screenshot to the window
+def add_image(image_path):
+    image = image.open(image_path)
+    photo = ImageTk.PhotoImage(image)
+    label = tk.Label(window, image=photo)
+    label.pack
+    window.update()
